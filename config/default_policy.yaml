@@ -1,0 +1,86 @@
+# AegisGateway Production Security Policy
+
+version: "1.0"
+mode: "enforce" # options: enforce | audit
+
+# Inbound Request Guardrails
+inbound:
+  prompt_injection:
+    enabled: true
+    action: "block" # options: block | log
+    patterns:
+      - "(?i)ignore\\s+(?:all\\s+)?(?:previous|prior|above)\\s+instructions"
+      - "(?i)disregard\\s+(?:all\\s+)?(?:previous|prior)\\s+rules"
+      - "(?i)you\\s+are\\s+now\\s+in\\s+developer\\s+mode"
+      - "(?i)</system>|<override>|</instructions>"
+      - "(?i)repeat\\s+(?:the\\s+)?(?:(?:above|system|prior)\\s+)*instructions\\s+verbatim"
+      - "(?i)dump\\s+(?:your\\s+)?initial\\s+system\\s+prompt"
+
+  jailbreak:
+    enabled: true
+    action: "block"
+    patterns:
+      - "(?i)\\bDAN\\b.*do\\s+anything\\s+now"
+      - "(?i)never\\s+say\\s+(?:cannot|sorry|apologize)"
+      - "(?i)start\\s+your\\s+response\\s+with\\s+['\"]sure"
+      - "(?i)bypass\\s+all\\s+content\\s+filters"
+
+  canary:
+    enabled: true
+    token_prefix: "AEGIS_CANARY_"
+
+# Outbound Response Guardrails (Data Loss Prevention - DLP)
+outbound:
+  secrets:
+    enabled: true
+    action: "mask" # options: mask | block
+    mask_replacement: "[REDACTED_SECRET]"
+    patterns:
+      - "(?:AKIA|ABIA|ACCA|ASIA)[0-9A-Z]{16}"                    # AWS Access Key ID
+      - "gh[pousr]_[A-Za-z0-9_]{36,255}"                         # GitHub Personal Access Token
+      - "eyJ[A-Za-z0-9-_=]+\\.eyJ[A-Za-z0-9-_=]+\\.[A-Za-z0-9-_.+/=]+" # JWT Token
+      - "-----BEGIN (?:RSA|OPENSSH|EC|DSA)? PRIVATE KEY-----"   # Private Key block
+      - "(?:sk_live|sk_test)_[0-9a-zA-Z]{24,}"                   # Stripe Secret Key
+      - "gsk_[a-zA-Z0-9]{48,}"                                   # Groq API Key
+
+  pii:
+    enabled: true
+    action: "mask"
+    mask_replacement: "[REDACTED_PII]"
+    patterns:
+      - "\\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Z|a-z]{2,7}\\b" # Email Address
+      - "\\b\\d{3}-\\d{2}-\\d{4}\\b"                             # US Social Security Number (SSN)
+      - "\\b(?:4[0-9]{12}(?:[0-9]{3})?|5[1-5][0-9]{14}|3[47][0-9]{13})\\b" # Credit Card (Visa/Mastercard/Amex)
+
+  canary_leakage:
+    enabled: true
+    action: "block" # Block completion if internal system canary is leaked
+
+# Autonomous AI Agent Tool Call Firewall
+tool_firewall:
+  enabled: true
+  file_access:
+    deny_patterns:
+      - "(?:^|/)\\.env(?:\\..*)?$"
+      - "(?:^|/)\\.ssh(?:/.*)?$"
+      - "(?:^|/)id_rsa(?:\\.pub)?$"
+      - "(?:^|/)id_ed25519(?:\\.pub)?$"
+      - "^/etc/shadow$"
+      - "^/etc/passwd$"
+      - "\\.\\./\\.\\."
+
+  command_execution:
+    deny_patterns:
+      - "rm\\s+-(?:r[fF]|f[rR]|rf|fr)\\s+[/~]"
+      - "\\bcurl\\b.*\\|\\s*(?:ba)?sh"
+      - "\\bwget\\b.*\\|\\s*(?:ba)?sh"
+      - "(?:nc|netcat|ncat)\\s+.*-[eec]"
+      - ":\\(\\)\\s*\\{\\s*:\\|:&\\s*\\};:"
+      - "\\bmkfs\\b"
+
+  network_egress:
+    blocked_hosts:
+      - "169.254.169.254"
+      - "metadata.google.internal"
+      - "localhost"
+      - "127.0.0.1"
