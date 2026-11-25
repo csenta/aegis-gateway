@@ -1,12 +1,14 @@
 # AegisGateway
 
-**Enterprise-Grade Autonomous Security Gateway & Data Loss Prevention (DLP) Proxy for LLM Applications and AI Agents.**
+> **Status:** prototype. A personal security-research project, not a production product. Expect rough edges; issues and pull requests are welcome.
+
+**Prototype Autonomous Security Gateway & Data Loss Prevention (DLP) Proxy for LLM Applications and AI Agents.**
 
 [![CI](https://github.com/csenta/aegis-gateway/actions/workflows/ci.yml/badge.svg)](https://github.com/csenta/aegis-gateway/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Python: 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/)
 
-AegisGateway is an ultra-fast, drop-in reverse proxy that sits between your client applications and LLM backends (OpenAI, Anthropic, Groq, Ollama, vLLM). It enforces bi-directional security policies: neutralizing inbound prompt injection attacks, redacting outbound secrets and PII, and firewalling agent tool calls.
+AegisGateway is a lightweight, drop-in reverse proxy that sits between your client applications and LLM backends (OpenAI, Anthropic, Groq, Ollama, vLLM). It enforces bi-directional security policies: neutralizing inbound prompt injection attacks, redacting outbound secrets and PII, and firewalling agent tool calls.
 
 ---
 
@@ -166,3 +168,7 @@ python3 -m unittest discover -s tests -v
 - [API.md](API.md) — Full API reference for endpoints and error payloads.
 - [SECURITY.md](SECURITY.md) — Threat model, OWASP LLM coverage, and vulnerability reporting.
 - [CONTRIBUTING.md](CONTRIBUTING.md) — Developer setup and contribution guidelines.
+
+## License
+
+MIT. See [LICENSE](LICENSE).
